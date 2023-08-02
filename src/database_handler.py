@@ -62,21 +62,38 @@ class DataBase:
         return proc.fetchone()
 
     def new_user(self, user):
-        table = "lister" if user["location"] else "volunteer"
-        self.cur.execute(
-            f"""
-            INSERT INTO {table} (full_name, email, password, dob, phone, token, time, location)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-            """,
-            (
-                user["name"].title(),
-                user["email"],
-                user["password"],
-                user["dob"],
-                user["phone"],
-                user["token"],
-                user["time"],
-                user["location"],
-            ),
-        )
+        if user["location"]:
+            self.cur.execute(
+                f"""
+                INSERT INTO lister (full_name, email, password, dob, phone, token, time, location)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    user["name"].title(),
+                    user["email"],
+                    user["password"],
+                    user["dob"],
+                    user["phone"],
+                    user["token"],
+                    user["time"],
+                    user["location"],
+                ),
+            )
+        else:
+            self.cur.execute(
+                f"""
+                INSERT INTO volunteer (full_name, email, password, dob, phone, token, time)
+                VALUES (?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    user["name"].title(),
+                    user["email"],
+                    user["password"],
+                    user["dob"],
+                    user["phone"],
+                    user["token"],
+                    user["time"],
+                ),
+            )
+
         self.conn.commit()

@@ -10,7 +10,7 @@ class DataBase:
     def startup(self):
         self.cur.execute(
             """
-            CREATE TABLE IF NOT EXISTS lister
+            CREATE TABLE IF NOT EXISTS distributor
                 (
                     user_id   BIGINT UNIQUE PRIMARY KEY,
                     full_name TEXT,
@@ -45,12 +45,12 @@ class DataBase:
         self.cur.commit()
         self.conn.close()
 
-    def check_lister_email_exists(self, email: str):
-        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM lister WHERE email = ?);", (email,))
+    def check_distributor_email_exists(self, email: str):
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM distributor WHERE email = ?);", (email,))
         return proc.fetchone()
 
-    def check_lister_phone_exists(self, phone: str):
-        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM lister WHERE phone = ?);", (phone,))
+    def check_distributor_phone_exists(self, phone: str):
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM distributor WHERE phone = ?);", (phone,))
         return proc.fetchone()
 
     def check_volunteer_email_exists(self, email: str):
@@ -65,7 +65,7 @@ class DataBase:
         if user["location"]:
             self.cur.execute(
                 f"""
-                INSERT INTO lister (full_name, email, password, dob, phone, token, time, location)
+                INSERT INTO distributor (full_name, email, password, dob, phone, token, time, location)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
                 """,
                 (
@@ -97,3 +97,20 @@ class DataBase:
             )
 
         self.conn.commit()
+
+    def get_user_by_phone(self, phone: str):
+        proc = self.cur.execute("SELECT * FROM distributor WHERE phone = ?;", (phone,))
+        data = proc.fetchone()
+        if not data:
+            proc = self.cur.execute("SELECT * FROM volunteer WHERE phone = ?;", (phone,))
+            data = proc.fetchone()
+        return data
+    
+    def get_user_by_email(self, email: str):
+        proc = self.cur.execute("SELECT * FROM distributor WHERE email = ?;", (email,))
+        data = proc.fetchone()
+        if not data:
+            proc = self.cur.execute("SELECT * FROM volunteer WHERE email = ?;", (email,))
+            data = proc.fetchone()
+        return data
+    

@@ -1,0 +1,5 @@
+orjson
+uvicorn
+fastapi
+slowapi
+passlib[bcrypt]

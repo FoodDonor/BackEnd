@@ -22,8 +22,10 @@ class DataBase:
                     time      REAL,
                     location  BLOB
                 );
-            """)
-        self.cur.execute("""
+            """
+        )
+        self.cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS volunteer
                 (
                     user_id   BIGINT UNIQUE PRIMARY KEY,
@@ -44,26 +46,26 @@ class DataBase:
         self.conn.close()
 
     def check_lister_email_exists(self, email: str):
-        proc = self.cur.execute(f"SELECT EXISTS(SELECT 1 FROM lister WHERE email = ?);", (email,))
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM lister WHERE email = ?);", (email,))
         return proc.fetchone()
 
     def check_lister_phone_exists(self, phone: str):
-        proc = self.cur.execute(f"SELECT EXISTS(SELECT 1 FROM lister WHERE phone = ?);", (phone,))
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM lister WHERE phone = ?);", (phone,))
         return proc.fetchone()
 
     def check_volunteer_email_exists(self, email: str):
-        proc = self.cur.execute(f"SELECT EXISTS(SELECT 1 FROM volunteer WHERE email = ?);", (email,))
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM volunteer WHERE email = ?);", (email,))
         return proc.fetchone()
 
     def check_volunteer_phone_exists(self, phone: str):
-        proc = self.cur.execute(f"SELECT EXISTS(SELECT 1 FROM volunteer WHERE phone = ?);", (phone,))
+        proc = self.cur.execute("SELECT EXISTS(SELECT 1 FROM volunteer WHERE phone = ?);", (phone,))
         return proc.fetchone()
 
     def new_user(self, user):
         table = "lister" if user["location"] else "volunteer"
         self.cur.execute(
             f"""
-            INSERT INTO {table} (full_name, email, password, dob, phone, location, details, token, time)
+            INSERT INTO {table} (full_name, email, password, dob, phone, token, time, location)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
@@ -72,10 +74,9 @@ class DataBase:
                 user["password"],
                 user["dob"],
                 user["phone"],
-                user["location"],
-                user["details"],
                 user["token"],
                 user["time"],
+                user["location"],
             ),
         )
         self.conn.commit()

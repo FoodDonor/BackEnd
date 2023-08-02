@@ -4,41 +4,17 @@ from base64 import b64decode
 from uuid import uuid4
 
 import orjson
-import uvicorn
-from fastapi import FastAPI, Request, Response
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
-from starlette.responses import Response
+from fastapi import APIRouter, Request, Response
 
-from config_handler import ConfigHandler
 from database_handler import DataBase
 from objects import User
-from utils import hash_password, ceaser
+from utils import ceaser, hash_password, save_traceback
 
-config = ConfigHandler(fn="config.json")
+router = APIRouter()
 db = DataBase()
-app = FastAPI()
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-def save_traceback(source, tb, message="none"):
-    with open("traceback.log", "a") as f:
-        f.write(
-            f"""============================
-At {source} on {int(time.time())} with message {message}
-============================
-{tb}
-============================\n
-"""
-        )
-
-
-
-@app.post("/register")
-@limiter.limit("3/10second")
+@router.post("/register")
 def register(request: Request, response: Response, user: User):
     try:
         if db.check_lister_email_exists(user.email) or db.check_volunteer_email_exists(user.phone):
@@ -68,6 +44,3 @@ def register(request: Request, response: Response, user: User):
         save_traceback("/register", traceback.format_exc())
         response.status_code = 500
         return {"status": "error", "message": "Internal server error. Please retry later."}
-
-
-uvicorn.run(app, host="127.0.0.1", port=config.get("host_port"))

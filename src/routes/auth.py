@@ -25,7 +25,7 @@ class AuthRoutes:
             try:
                 if isinstance(user.encrypted, bytes):
                     user.encrypted = user.encrypted.decode()
-                decoded_user = orjson.loads(b64decode(ceaser(b64decode(user.encrypted).decode())))
+                decoded_user = orjson.loads(b64decode(user.encrypted).decode())
             except:
                 response.status_code = 412
                 return {"status": "error", "message": "Encryption invalid"}

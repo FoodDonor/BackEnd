@@ -3,11 +3,16 @@ from fastapi import FastAPI
 
 from config_handler import ConfigHandler
 from database_handler import DataBase
-from routes import auth
+from routes import auth, distributor, public, volunteer
 
 config = ConfigHandler(fn="config.json")
 db = DataBase()
 app = FastAPI()
-app.include_router(auth.router)
+router = app.router
+
+distributor.DistributorRoutes(router, db)
+volunteer.VolunteerRoutes(router, db)
+public.PublicRoutes(router, db)
+auth.AuthRoutes(router, db)
 
 uvicorn.run(app, host="127.0.0.1", port=config.get("host_port"))

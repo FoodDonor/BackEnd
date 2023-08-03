@@ -9,7 +9,11 @@ class User(BaseModel):
         # password: str
         # dob: str
         # phone: str [MANDATORY]
+        # zip: str [MANDATORY]
         # location: str = ""
     # Login user:
         # access: str ### email or phone
         # password: str
+
+class UpdateObj(BaseModel):
+    ...

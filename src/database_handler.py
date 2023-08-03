@@ -51,6 +51,7 @@ class DataBase:
                 location_id INTEGER,
                 num_fed     INTEGER,
                 kgs_fed     INTEGER,
+                kgs_wasted  INTEGER,
                 manpower    INTEGER,
                 FOREIGN KEY (location_id) REFERENCES distributor(location_id)
             );
@@ -141,13 +142,13 @@ class DataBase:
             data = proc.fetchone()
         return data
 
-    def insert_daily_data(self, date, location_id, num_fed, kgs_fed, manpower):
+    def insert_daily_data(self, date, location_id, num_fed, kgs_fed, kgs_wasted, manpower):
         self.cur.execute(
             """
-            INSERT INTO daily_data (date, location_id, num_fed, kgs_fed, manpower)
-            VALUES (?, ?, ?, ?, ?);
+            INSERT INTO daily_data (date, location_id, num_fed, kgs_fed, kgs_wasted, manpower)
+            VALUES (?, ?, ?, ?, ?, ?);
             """,
-            (date, location_id, num_fed, kgs_fed, manpower, ),
+            (date, location_id, num_fed, kgs_fed, kgs_wasted, manpower, ),
         )
         self.conn.commit()
 
@@ -163,8 +164,8 @@ class DataBase:
         proc = self.cur.execute("SELECT * FROM distributor WHERE token = ?;", (token,))
         return proc.fetchone()
 
-    def get_daily_data_by_location_id(self, id):
-        proc = self.cur.execute("SELECT * FROM daily_data WHERE location_id = ?;", (id,))
+    def get_daily_data_by_location_id(self, loc_id):
+        proc = self.cur.execute("SELECT * FROM daily_data WHERE location_id = ?;", (loc_id,))
         return proc.fetchall()
 
     def get_locs_by_zip(self, zip):
@@ -191,7 +192,8 @@ class DataBase:
                     "t": req_entry[-1],
                     "pf": req_entry[3],
                     "kg": req_entry[4],
-                    "m": req_entry[5]
+                    "w": req_entry[5],
+                    "m": req_entry[6]
                 }
             )
         return locations

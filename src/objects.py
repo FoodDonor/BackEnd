@@ -16,7 +16,13 @@ class User(BaseModel):
         # password: str
 
 class UpdateObj(BaseModel):
-    ...
+    encrypted: str
 
 class DayDataObj(BaseModel):
-    ...
+    encrypted: str
+    # should contain:
+        # date: `mm-dd-yyyy`
+        # num_fed: int
+        # kgs_fed: int
+        # kgs_Wasted: int
+        # manpower: int

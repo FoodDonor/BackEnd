@@ -2,7 +2,7 @@ import time
 import traceback
 from base64 import b64decode
 from uuid import uuid4
-
+import datetime
 import orjson
 from fastapi import APIRouter, Response
 
@@ -63,6 +63,16 @@ class AuthRoutes:
                 raise ValidationError("Name is invalid.")
             if len(decoded_user["name"]) > 88:
                 raise ValidationError("Name is invalid.")
+
+            try:
+                dob = datetime.datetime.strptime(decoded_user["dob"], "%m-%d-%Y").timestamp()
+            except:
+                raise ValidationError("Date of birth is invalid.")
+
+            if int(datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 < 18:
+                raise ValidationError("You must be 18 years or older to register.")
+            if int(datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 123:
+                raise ValidationError("Date of birth is invalid.")
 
             loc_id = self.db.new_user(user)
 

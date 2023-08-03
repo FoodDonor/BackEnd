@@ -17,3 +17,6 @@ class User(BaseModel):
 
 class UpdateObj(BaseModel):
     ...
+
+class DayDataObj(BaseModel):
+    ...

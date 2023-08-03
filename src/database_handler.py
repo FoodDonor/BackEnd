@@ -175,7 +175,7 @@ class DataBase:
             datas = self.get_daily_data_by_location_id(distributor[3])
             for data in datas:
                 data.append(data[1])
-                data[1] = datetime.datetime.strptime(data[1], "%m-%d-%Y")
+                data[1] = datetime.datetime.strptime(data[1], "%m-%d-%Y").timestamp()
             req_entry = sorted(datas, key=lambda x: x[1], reverse=True)[0]
             req_entry_loc = self.cur.execute("SELECT location FROM distributor WHERE location_id = ?;", (req_entry[2],)).fetchone()[0]
             locations.append(

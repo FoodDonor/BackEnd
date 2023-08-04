@@ -1,6 +1,7 @@
 import traceback
 from typing import Annotated
-from fastapi import APIRouter, Response, Header
+
+from fastapi import APIRouter, Header, Response
 
 from utils import save_traceback
 
@@ -24,5 +25,6 @@ class VolunteerRoutes:
         if not user:
             response.status_code = 401
             return {"status": "error", "message": "Invalid token"}
-        user = user[0]
+
+        response.status_code = 200
         return {"status": "success", "message": "Locations fetched successfully", "locations": self.db.get_locs_by_zip(zip)}

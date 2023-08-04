@@ -1,8 +1,9 @@
+import datetime
 import time
 import traceback
 from base64 import b64decode
 from uuid import uuid4
-import datetime
+
 import orjson
 from fastapi import APIRouter, Response
 
@@ -39,8 +40,7 @@ class AuthRoutes:
                 user.encrypted = user.encrypted.decode()
             decoded_user = orjson.loads(b64decode(user.encrypted).decode())
         except:
-            response.status_code = 412
-            return {"status": "error", "message": "Encryption invalid"}
+            raise ValidationError("Encryption invalid")
 
         if self.db.check_distributor_email_exists(decoded_user["email"]) or self.db.check_volunteer_email_exists(
             decoded_user["phone"]
@@ -58,20 +58,20 @@ class AuthRoutes:
         decoded_user["password"] = hash_password(decoded_user["password"])
 
         # variable validation
-        if decoded_user["access"].startswith("+"):
+        if decoded_user["phone"]:
+            if not decoded_user["phone"].startswith("+"):
+                raise ValidationError("Phone number is invalid.")
             try:
-                int(decoded_user["access"][1:])
+                int(decoded_user["phone"][1:])
             except:
                 raise ValidationError("Phone number is invalid.")
-        else:
-            if (
-                "@" not in decoded_user["access"]
-                or "." not in decoded_user["access"]
-                or "." not in decoded_user["access"].split("@")[1]
-            ):
+
+        if decoded_user["email"]:
+            if "@" not in decoded_user["email"] or "." not in decoded_user["email"].split("@")[1]:
                 raise ValidationError("Email is invalid.")
-            if len(decoded_user["access"]) < 5:
+            if len(decoded_user["phone"]) < 5:
                 raise ValidationError("Email is invalid.")
+
         if len(set(decoded_user["password"])) < 4:
             raise ValidationError("Password is too weak.")
         if 8 > len(decoded_user["password"]) > 32:
@@ -121,7 +121,7 @@ class AuthRoutes:
         try:
             if isinstance(user.encrypted, bytes):
                 user.encrypted = user.encrypted.decode()
-            decoded_user = orjson.loads(b64decode(ceaser(b64decode(user.encrypted).decode())))
+            decoded_user = orjson.loads(b64decode(user.encrypted).decode())
         except:
             response.status_code = 412
             return {"status": "error", "message": "Encryption invalid"}
@@ -133,7 +133,7 @@ class AuthRoutes:
 
         if not user:
             response.status_code = 404
-            return {"status": "error", "message": "Phone number is not registered."}
+            return {"status": "error", "message": "User not found."}
         if user["password"] != hash_password(decoded_user["password"]):
             response.status_code = 403
             return {"status": "error", "message": "Password is incorrect."}

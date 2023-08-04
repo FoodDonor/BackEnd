@@ -1,5 +1,6 @@
-import sqlite3
 import datetime
+import sqlite3
+
 
 class DataBase:
     def __init__(self) -> None:
@@ -43,7 +44,6 @@ class DataBase:
             """
         )
         self.cur.execute(
-
             """
             CREATE TABLE IF NOT EXISTS daily_data (
                 id          INTEGER PRIMARY KEY,
@@ -65,6 +65,10 @@ class DataBase:
 
     def get_num_distribs(self):
         proc = self.cur.execute("SELECT COUNT(*) FROM distributor;")
+        return proc.fetchone()[0]
+
+    def get_num_volunteers(self):
+        proc = self.cur.execute("SELECT COUNT(*) FROM volunteer;")
         return proc.fetchone()[0]
 
     def check_distributor_email_exists(self, email: str):
@@ -133,7 +137,7 @@ class DataBase:
             proc = self.cur.execute("SELECT * FROM volunteer WHERE phone = ?;", (phone,))
             data = proc.fetchone()
         return data
-    
+
     def get_user_by_email(self, email: str):
         proc = self.cur.execute("SELECT * FROM distributor WHERE email = ?;", (email,))
         data = proc.fetchone()
@@ -148,17 +152,24 @@ class DataBase:
             INSERT INTO daily_data (date, location_id, num_fed, kgs_fed, kgs_wasted, manpower)
             VALUES (?, ?, ?, ?, ?, ?);
             """,
-            (date, location_id, num_fed, kgs_fed, kgs_wasted, manpower, ),
+            (
+                date,
+                location_id,
+                num_fed,
+                kgs_fed,
+                kgs_wasted,
+                manpower,
+            ),
         )
         self.conn.commit()
 
-    def get_total_data(self):
-        proc = self.cur.execute("SELECT SUM(num_fed) FROM daily_data;")
-        total_num_fed = proc.fetchone()[0]
-        proc = self.cur.execute("SELECT SUM(kgs_fed) FROM daily_data;")
-        total_kgs_fed = proc.fetchone()[0]
-
-        return {"total_num_fed": total_num_fed, "total_kgs_fed": total_kgs_fed, "total_locations": self.get_num_distribs()}
+    def get_total_stats(self):
+        return {
+            "total_num_fed": self.cur.execute("SELECT SUM(num_fed) FROM daily_data;").fetchone()[0],
+            "total_kgs_fed": self.cur.execute("SELECT SUM(kgs_fed) FROM daily_data;").fetchone()[0],
+            "total_locations": self.get_num_distribs(),
+            "total_volunteers": self.get_num_volunteers(),
+        }
 
     def get_distributor_by_token(self, token):
         proc = self.cur.execute("SELECT * FROM distributor WHERE token = ?;", (token,))
@@ -178,7 +189,9 @@ class DataBase:
                 data.append(data[1])
                 data[1] = datetime.datetime.strptime(data[1], "%m-%d-%Y").timestamp()
             req_entry = sorted(datas, key=lambda x: x[1], reverse=True)[0]
-            req_entry_loc = self.cur.execute("SELECT location FROM distributor WHERE location_id = ?;", (req_entry[2],)).fetchone()[0]
+            req_entry_loc = self.cur.execute(
+                "SELECT location FROM distributor WHERE location_id = ?;", (req_entry[2],)
+            ).fetchone()[0]
             locations.append(
                 {
                     "d": {
@@ -186,14 +199,14 @@ class DataBase:
                         "c": {
                             "e": distributor[2],
                             "p": distributor[1],
-                        }
+                        },
                     },
                     "l": req_entry_loc,
                     "t": req_entry[-1],
                     "pf": req_entry[3],
                     "kg": req_entry[4],
                     "w": req_entry[5],
-                    "m": req_entry[6]
+                    "m": req_entry[6],
                 }
             )
         return locations

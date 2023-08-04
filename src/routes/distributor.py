@@ -1,12 +1,13 @@
+import datetime
 import traceback
+from base64 import b64decode
 from typing import Annotated
-from fastapi import APIRouter, Response, Header
+
+import orjson
+from fastapi import APIRouter, Header, Response
 
 from objects import DayDataObj
 from utils import save_traceback
-import orjson
-from base64 import b64decode
-import datetime
 
 
 class DistributorRoutes:
@@ -43,7 +44,7 @@ class DistributorRoutes:
         user = user[0]
 
         try:
-            datetime.datetime.strptime(decoded_data, "%m-%d-%Y")
+            datetime.datetime.strptime(decoded_data["date"], "%m-%d-%Y")
         except:
             response.status_code = 412
             return {"status": "error", "message": "Invalid date"}

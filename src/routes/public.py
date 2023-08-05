@@ -1,8 +1,9 @@
 import threading
 import time
 import traceback
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Header
 
 from database_handler import DataBase
 from utils import save_traceback
@@ -16,6 +17,7 @@ class PublicRoutes:
         threading.Thread(target=self.maintain_stats, daemon=True).start()
         self.router.add_api_route("/public/stats", self.total, methods=["GET"])
         self.router.add_api_route("/public/locs", self.locs, methods=["GET"])
+        self.router.add_api_route("/public/specific", self.specific, methods=["GET"])
 
     def maintain_stats(self):
         maintainer_db_conn = DataBase()
@@ -31,3 +33,6 @@ class PublicRoutes:
 
     def locs(self):
         return {"locs": self.db.get_zips()}
+
+    def specific(self, zip: Annotated[int, Header()]):
+        return self.db.specific_locs(zip)

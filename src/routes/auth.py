@@ -7,9 +7,8 @@ from uuid import uuid4
 import orjson
 from fastapi import APIRouter, Response
 
-from database_handler import DataBase
 from objects import User
-from utils import ceaser, hash_password, save_traceback
+from utils import hash_password, save_traceback, verify_password
 
 
 class ValidationError(BaseException):
@@ -17,7 +16,7 @@ class ValidationError(BaseException):
 
 
 class AuthRoutes:
-    def __init__(self, router: APIRouter, db: DataBase):
+    def __init__(self, router: APIRouter, db):
         self.router = router
         self.db = db
         self.router.add_api_route("/auth/register", self.register, methods=["POST"])
@@ -26,9 +25,9 @@ class AuthRoutes:
     def register(self, response: Response, user: User):
         try:
             return self._register(response, user)
-        except ValidationError:
+        except ValidationError as e:
             response.status_code = 412
-            return {"status": "error", "message": str(ValidationError)}
+            return {"status": "error", "message": str(e)}
         except Exception:
             save_traceback("/auth/register", traceback.format_exc())
             response.status_code = 500
@@ -41,6 +40,9 @@ class AuthRoutes:
             decoded_user = orjson.loads(b64decode(user.encrypted).decode())
         except:
             raise ValidationError("Encryption invalid")
+
+        if list(decoded_user.keys()) != ["name", "email", "password", "dob", "phone", "zip", "location"]:
+            raise ValidationError("Invalid request.")
 
         if self.db.check_distributor_email_exists(decoded_user["email"]) or self.db.check_volunteer_email_exists(
             decoded_user["phone"]
@@ -89,12 +91,12 @@ class AuthRoutes:
         except:
             raise ValidationError("Date of birth is invalid.")
 
-        if int(datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 < 18:
+        if int(datetime.datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 18:
             raise ValidationError("You must be 18 years or older to register.")
-        if int(datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 123:
+        if int(datetime.datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 123:
             raise ValidationError("Date of birth is invalid.")
 
-        loc_id = self.db.new_user(user)
+        loc_id = self.db.new_user(decoded_user)
 
         response.status_code = 200
         response.set_cookie(key="authorization", value=decoded_user["token"])
@@ -126,6 +128,10 @@ class AuthRoutes:
             response.status_code = 412
             return {"status": "error", "message": "Encryption invalid"}
 
+        if list(decoded_user.keys()) != ["access", "password"]:
+            response.status_code = 412
+            return {"status": "error", "message": "Invalid request."}
+
         if decoded_user["access"].startswith("+"):
             user = self.db.get_user_by_phone(decoded_user["access"])
         else:
@@ -134,19 +140,20 @@ class AuthRoutes:
         if not user:
             response.status_code = 404
             return {"status": "error", "message": "User not found."}
-        if user["password"] != hash_password(decoded_user["password"]):
+
+        if not verify_password(decoded_user["password"], user[3]):
             response.status_code = 403
             return {"status": "error", "message": "Password is incorrect."}
 
         response.status_code = 200
-        response.set_cookie(key="authorization", value=user["token"])
+        response.set_cookie(key="authorization", value=user[6])
 
         if "location_id" in user:
-            response.set_cookie(key="location_id", value=user["location_id"])
+            response.set_cookie(key="location_id", value=user[8])
             return {
                 "status": "success",
                 "message": "User logged in successfully.",
-                "location_id": user["location_id"],
-                "authorization": user["token"],
+                "location_id": user[8],
+                "authorization": user[6],
             }
-        return {"status": "success", "message": "User logged in successfully.", "authorization": user["token"]}
+        return {"status": "success", "message": "User logged in successfully.", "authorization": user[6]}

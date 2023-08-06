@@ -3,10 +3,20 @@ from fastapi import FastAPI
 
 from database_handler import DataBase
 from routes import auth, distributor, public, volunteer
+from fastapi.middleware.cors import CORSMiddleware
 
 db = DataBase()
 app = FastAPI()
 router = app.router
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 distributor.DistributorRoutes(router, db)
 volunteer.VolunteerRoutes(router, db)

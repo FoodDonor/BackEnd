@@ -20,7 +20,6 @@ def update_help_status(location_id):
     conn.commit()
 
 
-
 # Generate a random phone number
 def generate_random_phone(country_code):
     if country_code == 'US':

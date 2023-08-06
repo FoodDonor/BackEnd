@@ -22,11 +22,11 @@ class DistributorRoutes:
 
     def remove_old_help(self):
         while True:
-            time.sleep(60 * 10)
             try:
                 self.db.remove_old_help()
             except:
                 save_traceback("/distributor/remove_old_help_loop", traceback.format_exc())
+            time.sleep(60 * 10)
 
     def request_help(self, response: Response, authorization: Annotated[str, Header()], loc_id: Annotated[int, Header()]):
         try:

@@ -38,6 +38,7 @@ class AuthRoutes:
             if isinstance(user.encrypted, bytes):
                 user.encrypted = user.encrypted.decode()
             decoded_user = orjson.loads(b64decode(user.encrypted).decode())
+            decoded_user is not None
         except:
             raise ValidationError("Encryption invalid")
 
@@ -61,9 +62,11 @@ class AuthRoutes:
 
         # variable validation
         if decoded_user["phone"]:
+            decoded_user["phone"] = decoded_user["phone"].replace("-", "")
             if not decoded_user["phone"].startswith("+"):
                 raise ValidationError("Phone number is invalid.")
             try:
+                print(decoded_user["phone"][1:])
                 int(decoded_user["phone"][1:])
             except:
                 raise ValidationError("Phone number is invalid.")
@@ -71,7 +74,7 @@ class AuthRoutes:
         if decoded_user["email"]:
             if "@" not in decoded_user["email"] or "." not in decoded_user["email"].split("@")[1]:
                 raise ValidationError("Email is invalid.")
-            if len(decoded_user["phone"]) < 5:
+            if len(decoded_user["email"]) < 5:
                 raise ValidationError("Email is invalid.")
 
         if len(set(decoded_user["password"])) < 4:
@@ -91,9 +94,9 @@ class AuthRoutes:
         except:
             raise ValidationError("Date of birth is invalid.")
 
-        if int(datetime.datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 18:
+        if int(datetime.datetime.now().timestamp()) - dob < 18 * 60 * 60 * 24 * 365.25:
             raise ValidationError("You must be 18 years or older to register.")
-        if int(datetime.datetime.now().timestamp()) - dob / 60 * 60 * 24 * 365.25 > 123:
+        if int(datetime.datetime.now().timestamp()) - dob > 123 * 60 * 60 * 24 * 365.25:
             raise ValidationError("Date of birth is invalid.")
 
         loc_id = self.db.new_user(decoded_user)

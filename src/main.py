@@ -13,4 +13,5 @@ volunteer.VolunteerRoutes(router, db)
 public.PublicRoutes(router, db)
 auth.AuthRoutes(router, db)
 
-uvicorn.run(app, host="0.0.0.0", port=41849)
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=41849, reload=True)

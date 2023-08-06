@@ -20,13 +20,13 @@ class DataBase:
                     password    TEXT,
                     dob         TEXT,
                     phone       TEXT,
+                    help        INTEGER,
+                    help_expires_at REAL,
                     token       TEXT,
                     time        REAL,
                     location_id BIGINT UNIQUE,
                     zip         TEXT,
-                    location    BLOB,
-                    help        INTEGER
-                    help_expires_at REAL
+                    location    BLOB
                 );
             """
         )
